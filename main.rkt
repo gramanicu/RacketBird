@@ -123,9 +123,9 @@
   (State-bird state))
 
 (define (get-bird-y bird)
-  (posn-y Bird-pos bird))
+  (posn-y (Bird-pos bird)))
 (define (get-bird-x bird)
-  (posn-x Bird-pos bird))
+  (posn-x (Bird-pos bird)))
 
 ;TODO 3
 ; Trebuie să implementăm logică gravitației. next-state-bird va primi drept
@@ -193,7 +193,7 @@
 ; scroll-speed-ul dat.
 (define (move-pipes pipes scroll-speed)
   (map (λ(pipe)
-         (struct-copy Pipe pipe [pos (make-posn (+ (get-pipe-x pipe) scroll-speed) (get-pipe-y pipe))]))
+         (struct-copy Pipe pipe [pos (make-posn (- (get-pipe-x pipe) scroll-speed) (get-pipe-y pipe))]))
        pipes))
 
 ;TODO 12
@@ -204,8 +204,9 @@
 ;
 ; Hint: cunoaștem lățimea unui pipe, pipe-width
 (define (clean-pipes pipes)
-  pipes)
-
+  (filter-map (λ(pipe)
+         (and (>= (get-pipe-x pipe) (- 0 pipe-width)) pipe))
+       pipes))
 
 ;TODO 13
 ; Vrem să avem un sursa continuă de pipe-uri.
@@ -213,8 +214,15 @@
 ; din stare și, dacă avem mai puțin de no-pipes pipe-uri, mai adăugăm una la mulțime,
 ; având x-ul egal cu pipe-width + pipe-gap + x-ul celui mai îndepărtat pipe, în raport
 ; cu pasărea.
+(define (last-pipe-x pipes)
+  (get-pipe-x (last pipes)))
+
 (define (add-more-pipes pipes)
-  pipes)
+  (if (< (length pipes) no-pipes)
+      (append pipes (list (Pipe (make-posn
+                           (+ pipe-width (+ pipe-gap (last-pipe-x pipes)))
+                           (+ added-number (random random-threshold))))))
+      pipes))
 
 ;TODO 14
 ; Vrem ca toate funcțiile implementate anterior legate de pipes să fie apelate
@@ -223,12 +231,16 @@
 ; și va apela cele trei funcții implementate anterior, în această ordine:
 ; move-pipes, urmat de clean-pipes, urmat de add-more pipes.
 (define (next-state-pipes pipes scroll-speed)
-  pipes)
+  (add-more-pipes
+   (clean-pipes
+    (move-pipes pipes scroll-speed))))
+
+;(next-state-pipes (list (Pipe (make-posn -200 100)) (Pipe (make-posn 0 100))) 20)
 
 ;TODO 17
 ; Creați un getter ce va extrage scorul din starea jocului.
 (define (get-score state)
-  state)
+  (Variables-score (State-vars state)))
 
 ;TODO 19
 ; Vrem să creăm logica coliziunii cu pământul.
@@ -239,8 +251,11 @@
 ; Hint: știm înălțimea păsării, bird-height, și y-ul pământului, ground-y.
 ; Coliziunea ar presupune ca un colț inferior al păsării să aibă y-ul
 ; mai mare sau egal cu cel al pământului.
+; Returneaza true la coliziune
 (define (check-ground-collision bird)
- `codul-tau-aici)
+ (if (< (+ (get-bird-y bird) bird-height) (- scene-height ground-height))
+     #f
+     #t))
 
 ; invalid-state?
 ; invalid-state? îi va spune lui big-bang dacă starea curentă mai este valida,
@@ -255,8 +270,9 @@
 ; Odată creată logică coliziunilor dintre pasăre și pipes, vrem să integrăm
 ; funcția nou implementată în invalid-state?.
 (define (invalid-state? state)
-  #f)
+  (check-ground-collision (get-bird state)))
 
+(invalid-state? (get-initial-state))
 ;TODO 21
 ; Odată ce am creat pasărea, pipe-urile, scor-ul și coliziunea cu pământul,
 ; următorul pas este verificarea coliziunii dintre pasăre și pipes.
@@ -298,9 +314,13 @@
 ; Vrem ca next-state să incrementeze scorul cu 0.1 la fiecare cadru.
 (define (next-state state)
   (match-let* ([(State bird vars pipes) state]
-               [gravity (Variables-gravity vars)])
+               [gravity (Variables-gravity vars)]
+               [(Variables gravity momentum scroll-speed score) (State-vars state)])
     (struct-copy State state
-               [bird (next-state-bird bird gravity)])))
+               [bird (next-state-bird bird gravity)]
+               [pipes (next-state-pipes pipes scroll-speed)]
+               [vars (Variables gravity momentum scroll-speed (+ 0.1 score))]
+               )))
 
 ; draw-frame
 ; draw-frame va fi apelat de big-bang dupa fiecare apel la next-state, pentru a afisa cadrul curent.
