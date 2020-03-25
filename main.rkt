@@ -126,6 +126,8 @@
   (posn-y (Bird-pos bird)))
 (define (get-bird-x bird)
   (posn-x (Bird-pos bird)))
+(define (get-bird-center bird)
+  (make-posn (+ (get-bird-x bird) (/ bird-width 2)) (+ (get-bird-y bird) (/ bird-height 2))))
 
 ;TODO 3
 ; Trebuie să implementăm logică gravitației. next-state-bird va primi drept
@@ -349,13 +351,12 @@
 
 (define (draw-frame state)
   (match-let* ([(State bird vars pipes) state]
-               [bird-pos (Bird-pos bird)]
                [score (Variables-score vars)])
     (place-images
      (list bird-image
            ground-image
            (score-to-image score))
-     (list bird-pos
+     (list (get-bird-center bird)
            (make-posn (/ scene-width 2) (+ ground-y (/ ground-height 2)))
            (make-posn text-x text-y))
      black-scene)))

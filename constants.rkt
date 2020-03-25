@@ -10,15 +10,15 @@
 (define ground-height (quotient scene-height 6))
 (define ground-y (- scene-height ground-height))
 
-;(define initial-gravity 1.3)
-(define initial-gravity 0)
+(define initial-gravity 1.3)
+;(define initial-gravity 0)
 (define initial-momentum 15.0)
 
 (define bird-width 81)
 (define bird-height 57)
 (define bird-x (quotient scene-width 3))
 (define bird-initial-y (quotient scene-height 2))
-;(define bird-initial-y 722)
+;(define bird-initial-y 742)
 
 (define pipe-width 104)
 (define pipe-height scene-height)
