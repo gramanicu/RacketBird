@@ -35,7 +35,9 @@
 (define text-y 50)
 (define abilities-posn (make-posn (- scene-width 50) 80))
 (define DISPLAYED_ABILITIES 4)
+(define SHOW_SCORE #t)
 
 ; checker stuff
+(define (disable-score) (set! SHOW_SCORE #f))
 (define (disable-bonus) (set! DISPLAYED_ABILITIES 0))
 (define (enable-bonus) (set! DISPLAYED_ABILITIES 4))

@@ -7,6 +7,7 @@
 
 (require "abilities.rkt")
 (require "constants.rkt")
+(require "random.rkt")
 ;---------------------------------------checker_exports------------------------------------------------
 (provide next-state)
 (provide next-state-bird)
@@ -127,7 +128,7 @@
 (define (get-bird-x bird)
   (posn-x (Bird-pos bird)))
 (define (get-bird-center bird)
-  (make-posn (+ (get-bird-x bird) (/ bird-width 2)) (+ (get-bird-y bird) (/ bird-height 2))))
+  (make-posn (+ (get-bird-x bird) (quotient bird-width 2)) (+ (get-bird-y bird) (quotient bird-height 2))))
 
 ;TODO 3
 ; Trebuie să implementăm logică gravitației. next-state-bird va primi drept
@@ -158,8 +159,7 @@
                [x (posn-x pos)]
                [y (posn-y pos)])
     (struct-copy Bird bird
-                 [pos (make-posn x (+ y vel))]
-                 [vel momentum])))
+                 [vel (- momentum)])))
 
 ; Change
 ; Change va fi responsabil de input-ul de la tastatură al jocului.
@@ -170,7 +170,7 @@
 (define (change current-state pressed-key)
   (match-let* ([(State bird vars pipes) current-state]
                [momentum (Variables-momentum vars)])
-    (cond [(key=? pressed-key " ") (struct-copy State current-state [bird (next-state-bird-onspace bird (- 0 momentum))])]
+    (cond [(key=? pressed-key " ") (struct-copy State current-state [bird (next-state-bird-onspace bird momentum)])]
           [else current-state])))
 
 ;TODO 9
@@ -272,9 +272,10 @@
 ; Odată creată logică coliziunilor dintre pasăre și pipes, vrem să integrăm
 ; funcția nou implementată în invalid-state?.
 (define (invalid-state? state)
-  (check-ground-collision (get-bird state)))
+  (match-let* ([bird (State-bird state)]
+               [pipes (State-pipes state)])
+  (or (check-ground-collision bird) (check-pipe-collisions bird pipes))))
 
-(invalid-state? (get-initial-state))
 ;TODO 21
 ; Odată ce am creat pasărea, pipe-urile, scor-ul și coliziunea cu pământul,
 ; următorul pas este verificarea coliziunii dintre pasăre și pipes.
@@ -290,8 +291,22 @@
 ; colțul din stânga sus și cel din dreapta jos ale celor două dreptunghiuri
 ; pe care vrem să verificăm coliziunea.
 (define (check-pipe-collisions bird pipes)
-  `codul-tau-aici)
+  (if (null? pipes)
+      #f
+      (if (check-collision-pipe bird (car pipes))
+          #t
+          (check-pipe-collisions bird (cdr pipes)))))
 
+(define (check-collision-pipe bird pipe)
+  (match-let* ([A1 (make-posn (get-pipe-x pipe) 0)]
+               [A2 (make-posn (+ (posn-x A1) pipe-width) (get-pipe-y pipe))]
+               [B1 (make-posn (posn-x A1) (+ (get-pipe-y pipe) pipe-self-gap))]
+               [B2 (make-posn (+ (posn-x A1) pipe-width) ground-y)]
+               [bird-left (Bird-pos bird)]
+               [bird-right (make-posn (+ (get-bird-x bird) bird-width) (+ (get-bird-y bird) bird-height))])
+    (or (check-collision-rectangles bird-left bird-right A1 A2)
+        (check-collision-rectangles bird-left bird-right B1 B2))))
+          
 (define (check-collision-rectangles A1 A2 B1 B2)
   (match-let ([(posn AX1 AY1) A1]
               [(posn AX2 AY2) A2]
@@ -344,10 +359,13 @@
 (define ground-image (rectangle scene-width ground-height "solid" "brown"))
 (define initial-scene (empty-scene scene-width scene-height))
 (define black-scene (rectangle scene-width scene-height "solid" "black"))
+(define pipe-images (stream-cons (rectangle pipe-width pipe-height "solid" "green") pipe-images))
 
 (define text-family (list "Gill Sans" 'swiss 'normal 'bold #f))
 (define (score-to-image x)
-	(apply text/font (~v (round x)) 24 "indigo" text-family))
+  (if SHOW_SCORE
+	(apply text/font (~v (round x)) 24 "indigo" text-family)
+	empty-image))
 
 (define (draw-frame state)
   (match-let* ([(State bird vars pipes) state]
@@ -357,13 +375,25 @@
            ground-image
            (score-to-image score))
      (list (get-bird-center bird)
-           (make-posn (/ scene-width 2) (+ ground-y (/ ground-height 2)))
+           (make-posn (quotient scene-width 2) (+ ground-y (quotient ground-height 2)))
            (make-posn text-x text-y))
-     black-scene)))
+     (place-pipes pipes initial-scene))
+    ))
 
 ; Folosind `place-image/place-images` va poziționa pipe-urile pe scenă.
 (define (place-pipes pipes scene)
-	'your-code-here)
+	(place-images
+         (stream->list (stream-take pipe-images (* 2 (length pipes))))
+         (append
+          (map (lambda (pipe) (make-posn
+                               (+ (get-pipe-x pipe) (quotient pipe-width 2))
+                               (- (get-pipe-y pipe) (quotient pipe-height 2)))) pipes)
+          (map (lambda (pipe) (make-posn
+                               (+ (get-pipe-x pipe) (quotient pipe-width 2))
+                               (+ (get-pipe-y pipe) (+ (quotient pipe-height 2) pipe-self-gap)))) pipes))
+         scene))
+                 
+         
 
 ; Bonus
 ; Completați abilities.rkt mai întâi, aceste funcții căt, apoi legați
