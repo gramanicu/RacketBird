@@ -197,6 +197,7 @@
   (map (λ(pipe)
          (struct-copy Pipe pipe [pos (make-posn (- (get-pipe-x pipe) scroll-speed) (get-pipe-y pipe))]))
        pipes))
+            
 
 ;TODO 12
 ; Vom implementa logica prin care pipe-urile vor fi șterse din stare. În momentul
@@ -357,7 +358,7 @@
 ; pipes -> pipe-width si pipe-height
 (define bird-image (rectangle bird-width bird-height  "solid" "yellow"))
 (define ground-image (rectangle scene-width ground-height "solid" "brown"))
-(define initial-scene (empty-scene scene-width scene-height))
+(define initial-scene (rectangle scene-width scene-height "solid" "white"))
 (define black-scene (rectangle scene-width scene-height "solid" "black"))
 (define pipe-images (stream-cons (rectangle pipe-width pipe-height "solid" "green") pipe-images))
 
