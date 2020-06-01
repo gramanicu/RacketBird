@@ -36,7 +36,7 @@
 (provide get-pipes)
 (provide get-pipe-x)
 
-; score25
+; score25s
 (provide get-score)
 
 (provide get-abilities)
@@ -72,7 +72,7 @@
 ; și viteză pe y.
 ; Pe parcursul temei, în state, salvați coordonatele colțurilor din stânga sus ale obiectelor.
 ; Aceasta va face mai ușoară atât logică mișcării obiectelor, cât și testarea cerințelor.
-; Toate coordonatele oferite în comentarii sau în fișierul variables.rkt se referă la
+; Toate coordonatele oferite în comentarii sau în fișerul variables.rkt se referă la
 ; colțul din stânga sus ale obiectelor!
 
 ;TODO 1
